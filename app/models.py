@@ -19,36 +19,59 @@ class DoubleConv(nn.Module):
 class SiameseUNet(nn.Module):
     def __init__(self):
         super().__init__()
-        self.encoder = timm.create_model('efficientnet_b0', pretrained=False, features_only=True, out_indices=[1, 2, 3])
-        f_channels = [24, 40, 112]  # Каналы EfficientNet-B0
-        self.bot_conv = DoubleConv(f_channels[2], 128)
+
+        self.encoder = timm.create_model(
+            'mobilenetv3_large_100',
+            pretrained=False,
+            features_only=True,
+            out_indices=[1, 2, 3]
+        )
+
+        f_channels = self.encoder.feature_info.channels()
+        c1, c2, c3 = f_channels[0], f_channels[1], f_channels[2]
+
+        self.bot_conv = DoubleConv(c3, 128)
+
         self.up1 = nn.Upsample(scale_factor=2, mode='bilinear', align_corners=True)
-        self.dec1 = DoubleConv(128 + f_channels[1], 64)
+        self.dec1 = DoubleConv(128 + c2, 64)
+
         self.up2 = nn.Upsample(scale_factor=2, mode='bilinear', align_corners=True)
-        self.dec2 = DoubleConv(64 + f_channels[0], 32)
+        self.dec2 = DoubleConv(64 + c1, 32)
+
         self.up3 = nn.Upsample(scale_factor=2, mode='bilinear', align_corners=True)
         self.dec3 = DoubleConv(32, 16)
+
         self.up4 = nn.Upsample(scale_factor=2, mode='bilinear', align_corners=True)
         self.final_conv = nn.Conv2d(16, 1, kernel_size=1)
 
-    def forward_features(self, x): return self.encoder(x)
+    def forward_features(self, x):
+        return self.encoder(x)
 
     def forward(self, test_img, gold_img):
         ft_test = self.forward_features(test_img)
         ft_gold = self.forward_features(gold_img)
-        diffs = [torch.abs(ft_test[i] - ft_gold[i]) for i in range(len(ft_test))]
 
-        x = self.bot_conv(diffs[2])
-        x = self.up1(x);
-        x = torch.cat([x, diffs[1]], dim=1);
+        # Считаем разницу
+        diffs = [torch.abs(ft_test[i] - ft_gold[i]) for i in range(len(ft_test))]
+        d1, d2, d3 = diffs[0], diffs[1], diffs[2]
+
+        # Проход по декодеру
+        x = self.bot_conv(d3)
+
+        x = self.up1(x)
+        x = torch.cat([x, d2], dim=1)
         x = self.dec1(x)
-        x = self.up2(x);
-        x = torch.cat([x, diffs[0]], dim=1);
+
+        x = self.up2(x)
+        x = torch.cat([x, d1], dim=1)
         x = self.dec2(x)
-        x = self.up3(x);
+
+        x = self.up3(x)
         x = self.dec3(x)
-        x = self.up4(x);
+
+        x = self.up4(x)
         logits = self.final_conv(x)
+
         return logits
 
 
