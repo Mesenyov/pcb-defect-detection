@@ -51,11 +51,11 @@ class SiameseUNet(nn.Module):
         ft_test = self.forward_features(test_img)
         ft_gold = self.forward_features(gold_img)
 
-        # Считаем разницу
+        # Compute absolute feature difference
         diffs = [torch.abs(ft_test[i] - ft_gold[i]) for i in range(len(ft_test))]
         d1, d2, d3 = diffs[0], diffs[1], diffs[2]
 
-        # Проход по декодеру
+        # Decoder forward pass
         x = self.bot_conv(d3)
 
         x = self.up1(x)

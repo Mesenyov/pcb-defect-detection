@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="ru">
+<html lang="en">
 
 <head>
     <meta charset="UTF-8">
@@ -18,7 +18,7 @@
         <div class="header-controls">
             <input type="file" id="pcbInput" accept="image/*">
             <button class="btn" onclick="document.getElementById('pcbInput').click()">
-                [+] Выбрать плату
+                [+] Choose board
             </button>
         </div>
     </header>
@@ -26,39 +26,39 @@
     <main>
 
         <section id="examplesArea">
-            <h2>> ПРИМЕРЫ</h2>
+            <h2>> EXAMPLES</h2>
             <div class="examples-grid" id="examplesGrid">
             </div>
 
             <div
                 style="margin-bottom: 30px; text-align: center; color: var(--text-dim); border-bottom: 1px solid #333; padding-bottom: 20px;">
-                <p>Выберите пример выше или загрузите своё изображение через меню сверху.</p>
+                <p>Select an example above or upload your own image via the top menu.</p>
             </div>
         </section>
 
         <section id="templateArea" class="hidden fade-in">
-            <h2>> ВЫБОР ЭТАЛОНА</h2>
+            <h2>> TEMPLATE SELECTION</h2>
 
             <div class="template-selection">
-                <p style="color: var(--accent-color)">Тестируемая плата: <span id="selectedFileName"
+                <p style="color: var(--accent-color)">Test board: <span id="selectedFileName"
                         style="color: white">file.jpg</span></p>
-                <p style="margin-top: 10px; font-size: 0.9rem;">Выберите эталон из базы знаний или загрузите свой:</p>
+                <p style="margin-top: 10px; font-size: 0.9rem;">Select a golden template from the database or upload your own:</p>
 
                 <div class="template-grid" id="templateGrid">
                 </div>
 
                 <div class="action-bar">
                     <button class="btn btn-secondary" onclick="resetUI()">
-                        < ОТМЕНА </button>
+                        < CANCEL </button>
 
                             <div style="display: flex; gap: 10px;">
                                 <input type="file" id="customTemplateInput" accept="image/*">
                                 <button class="btn btn-secondary"
                                     onclick="document.getElementById('customTemplateInput').click()">
-                                    Загрузить свой эталон
+                                    Upload Custom Template
                                 </button>
                                 <button class="btn" id="startAnalysisBtn" onclick="startAnalysis()" disabled>
-                                    ЗАПУСТИТЬ АНАЛИЗ >
+                                    START ANALYSIS >
                                 </button>
                             </div>
                 </div>
@@ -69,13 +69,13 @@
             <div class="loader-container">
                 <div class="scan-line"></div>
                 <div class="terminal-text">
-                    АНАЛИЗИРУЕМ ПЛАТУ
+                    ANALYZING BOARD...
                 </div>
             </div>
         </section>
 
         <section id="resultsArea" class="hidden fade-in">
-            <h2>> ОТЧЕТ АНАЛИЗА</h2>
+            <h2>> ANALYSIS REPORT</h2>
 
             <div id="verdictBox" class="verdict-box">
             </div>
@@ -87,7 +87,7 @@
     </main>
 
     <footer>
-        Created by Efremenko & Mesenyov // 2025
+        Created by Efremenko & Mesenyov // 2026
     </footer>
 
     <script src="/static/js/script.js"></script>

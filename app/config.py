@@ -10,12 +10,12 @@ PROTO_PATH = os.path.join(WEIGHTS_DIR, 'prototypes_flexible.pth')
 TEMPLATES_DIR = os.path.join(BASE_DIR, 'PCB_Golden_Templates')
 EXAMPLES_DIR = os.path.join(BASE_DIR, 'examples')
 
-CLASS_TRANSLATION = {
-    'missing_hole': 'Незапаянное место',
-    'mouse_bite': 'Мышиный укус',
-    'open_circuit': 'Обрыв цепи',
-    'short': 'Замыкание',
-    'spur': 'Заусенец',
-    'spurious_copper': 'Лишняя медь',
-    'Unknown': 'НЕИЗВЕСТНЫЙ ДЕФЕКТ'
+CLASS_DISPLAY_NAMES = {
+    'missing_hole': 'Missing Hole',
+    'mouse_bite': 'Mouse Bite',
+    'open_circuit': 'Open Circuit',
+    'short': 'Short Circuit',
+    'spur': 'Spur',
+    'spurious_copper': 'Spurious Copper',
+    'Unknown': 'UNKNOWN DEFECT'
 }

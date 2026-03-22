@@ -72,7 +72,7 @@ customTemplateInput.addEventListener('change', (e) => {
         currentTemplateName = null;
         document.querySelectorAll('.template-card').forEach(c => c.classList.remove('selected'));
         startBtn.disabled = false;
-        startBtn.innerHTML = `ЗАПУСТИТЬ АНАЛИЗ (Cвой: ${currentTemplateFile.name}) >`;
+        startBtn.innerHTML = `START ANALYSIS (Custom: ${currentTemplateFile.name}) >`;
     }
 });
 
@@ -98,7 +98,7 @@ function showTemplateSelection(filename) {
     sections.template.scrollIntoView({ behavior: 'smooth' });
 
     startBtn.disabled = true;
-    startBtn.innerHTML = "ЗАПУСТИТЬ АНАЛИЗ >";
+    startBtn.innerHTML = "START ANALYSIS >";
     document.querySelectorAll('.template-card').forEach(c => c.classList.remove('selected'));
 }
 
@@ -109,7 +109,7 @@ function selectTemplate(cardElement, templateName) {
     currentTemplateFile = null;
     currentTemplateName = templateName;
     startBtn.disabled = false;
-    startBtn.innerHTML = `ЗАПУСТИТЬ АНАЛИЗ (${templateName}) >`;
+    startBtn.innerHTML = `START ANALYSIS (${templateName}) >`;
 }
 
 
@@ -163,7 +163,7 @@ async function sendAnalysisRequest(formData) {
 
     } catch (error) {
         console.error(error);
-        alert("Ошибка анализа: " + error.message);
+        alert("Analysis Error: " + error.message);
         sections.loading.classList.add('hidden');
     }
 }
@@ -194,16 +194,16 @@ function showResults(data) {
         return div;
     };
 
-    stack.appendChild(createCard("1. Тестируемая плата", data.images.test));
-    stack.appendChild(createCard("2. Эталонная плата", data.images.template));
+    stack.appendChild(createCard("1. Test Board", data.images.test));
+    stack.appendChild(createCard("2. Golden Template", data.images.template));
 
     if (data.has_defects) {
-        stack.appendChild(createCard("3. Heatmap (Различия)", data.images.heatmap));
-        stack.appendChild(createCard("4. Маска дефектов", data.images.mask_overlay));
-        stack.appendChild(createCard("5. Классификация (Результат)", data.images.final,
-            "Красная рамка = Известный дефект, Желтая рамка = Неизвестный"));
+        stack.appendChild(createCard("3. Heatmap (Differences)", data.images.heatmap));
+        stack.appendChild(createCard("4. Defect Mask", data.images.mask_overlay));
+        stack.appendChild(createCard("5. Classification (Result)", data.images.final,
+            "Red bounding box = Known defect, Yellow bounding box = Unknown (OOD)"));
     } else {
-        stack.appendChild(createCard("Результат проверки", data.images.final));
+        stack.appendChild(createCard("Inspection Result", data.images.final));
     }
 
     sections.results.classList.remove('hidden');

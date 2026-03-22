@@ -6,20 +6,20 @@ import albumentations as A
 from albumentations.pytorch import ToTensorV2
 
 from app.config import (DEVICE, SIAMESE_PATH, BACKBONE_PATH, PROTO_PATH,
-                        CLASS_TRANSLATION)
+                        CLASS_DISPLAY_NAMES)
 from app.models import SiameseUNet, DefectEmbedder
-from app.utils import align_images, image_to_base64, draw_text_rus
+from app.utils import align_images, image_to_base64, draw_text_bg
 
 
 class PCBInspector:
     def __init__(self, min_threshold=0.55):
-        print(">>> Инициализация моделей...")
+        print(">>> Initializing models...")
         self.min_threshold = min_threshold
         self._load_models()
         self._setup_transforms()
 
     def _load_models(self):
-        # 1. Детектор
+        # 1. Siamese Detector
         self.detector = SiameseUNet().to(DEVICE)
         ckpt = torch.load(SIAMESE_PATH, map_location=DEVICE)
         if list(ckpt.keys())[0].startswith('module.'):
@@ -27,13 +27,13 @@ class PCBInspector:
         self.detector.load_state_dict(ckpt)
         self.detector.eval()
 
-        # 2. Эмбеддер
+        # 2. Metric Embedder
         self.embedder = DefectEmbedder().to(DEVICE)
         emb_ckpt = torch.load(BACKBONE_PATH, map_location=DEVICE)
         self.embedder.load_state_dict(emb_ckpt['model_state_dict'])
         self.embedder.eval()
 
-        # 3. Прототипы
+        # 3. Class Prototypes
         proto_data = torch.load(PROTO_PATH, map_location=DEVICE)
         self.prototypes = proto_data['prototypes']
         self.thresholds = proto_data['thresholds']
@@ -53,16 +53,16 @@ class PCBInspector:
         ])
 
     def predict_and_visualize(self, test_img, gold_img):
-        # Выравнивание
+        # Image alignment
         test_img = align_images(test_img, gold_img)
         if test_img is None: test_img = gold_img.copy()
 
-        # Подготовка
+        # Preprocessing
         test_rgb = cv2.cvtColor(test_img, cv2.COLOR_BGR2RGB)
         gold_rgb = cv2.cvtColor(gold_img, cv2.COLOR_BGR2RGB)
         orig_h, orig_w = test_rgb.shape[:2]
 
-        # Инференс Детектора
+        # Detector Inference
         aug = self.transform_siamese(image=test_rgb, image_golden=gold_rgb)
         t_tens = aug['image'].unsqueeze(0).to(DEVICE)
         g_tens = aug['image_golden'].unsqueeze(0).to(DEVICE)
@@ -72,7 +72,7 @@ class PCBInspector:
             probs = torch.sigmoid(logits)
             mask_raw = (probs > 0.5).float().cpu().numpy()[0, 0]
 
-        # Визуализация маски
+        # Mask Visualization
         mask_uint8 = cv2.resize((mask_raw * 255).astype(np.uint8), (orig_w, orig_h))
         heatmap = cv2.applyColorMap(mask_uint8, cv2.COLORMAP_JET)
 
@@ -83,7 +83,7 @@ class PCBInspector:
             red_layer[:] = (0, 0, 255)
             overlay_img[mask_bool] = cv2.addWeighted(overlay_img[mask_bool], 0.5, red_layer[mask_bool], 0.5, 0)
 
-        # Классификация
+        # Defect Classification
         final_img = test_img.copy()
         contours, _ = cv2.findContours(mask_uint8, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
         detections = []
@@ -91,7 +91,7 @@ class PCBInspector:
         if not contours:
             return self._build_response(test_img, gold_img, heatmap, overlay_img, final_img, detections)
 
-        # Масштабирование шрифта
+        # Adaptive font scaling
         scale_factor = float(orig_w) / 1500.0
         adaptive_font = int(max(12.0, min(45.0, 25.0 * scale_factor)))
         adaptive_thick = int(max(1.0, min(5.0, 3.0 * scale_factor)))
@@ -106,7 +106,7 @@ class PCBInspector:
             crop = test_rgb[y1:y2, x1:x2]
             if crop.size == 0: continue
 
-            # Эмбеддер
+            # Extract feature embeddings
             crop_tens = self.transform_embedder(image=crop)['image'].unsqueeze(0).to(DEVICE)
             with torch.no_grad():
                 feat = self.embedder(crop_tens)
@@ -121,28 +121,28 @@ class PCBInspector:
                     best_dist = dist
                     best_cls = cls_idx
 
-            # Нахождение неизвестных дефектов
+            # Unknown defect identification
             final_thresh = max(self.thresholds[best_cls], self.min_threshold)
             is_unknown = best_dist > final_thresh
             raw_name = "Unknown" if is_unknown else self.class_names[best_cls]
-            rus_name = CLASS_TRANSLATION.get(raw_name, raw_name)
+            display_name = CLASS_DISPLAY_NAMES.get(raw_name, raw_name)
 
-            # Визуализация
+            # Visualization
             color = (0, 255, 255) if is_unknown else (0, 0, 255)
             cv2.rectangle(final_img, (x, y), (x + w, y + h), color, adaptive_thick)
 
             text_pos = (x, y - int(adaptive_font * 1.4) - adaptive_thick)
             if text_pos[1] < 0: text_pos = (x, y + h + adaptive_thick)
 
-            final_img = draw_text_rus(final_img, rus_name, text_pos, (0, 0, 0), color, adaptive_font)
+            final_img = draw_text_bg(final_img, display_name, text_pos, (0, 0, 0), color, adaptive_font)
 
-            detections.append({"class": rus_name, "is_unknown": is_unknown})
+            detections.append({"class": display_name, "is_unknown": is_unknown})
 
         return self._build_response(test_img, gold_img, heatmap, overlay_img, final_img, detections)
 
     def _build_response(self, test, gold, heat, over, final, dets):
         return {
-            "verdict": f"Найдено дефектов: {len(dets)}" if dets else "Дефекты не найдены",
+            "verdict": f"Defects detected: {len(dets)}" if dets else "No defects detected",
             "has_defects": len(dets) > 0,
             "detections": dets,
             "images": {

@@ -5,7 +5,7 @@ from PIL import Image, ImageDraw, ImageFont
 
 
 def align_images(img_test, img_gold):
-    """Выравнивание изображений (SIFT + Homography)"""
+    """Image alignment using SIFT feature matching and Homography"""
     if img_test is None: return img_gold
     if img_gold is None: return img_test
 
@@ -51,8 +51,8 @@ def read_imagefile(file_bytes) -> np.ndarray:
     return cv2.imdecode(nparr, cv2.IMREAD_COLOR)
 
 
-def draw_text_rus(img_bgr, text, xy, text_color=(0, 0, 0), bg_color=None, font_size=20):
-    """Рисует текст с поддержкой кириллицы и подложкой"""
+def draw_text_bg(img_bgr, text, xy, text_color=(0, 0, 0), bg_color=None, font_size=20):
+    """Draws text with a background bounding box for better visibility"""
     img_pil = Image.fromarray(cv2.cvtColor(img_bgr, cv2.COLOR_BGR2RGB))
     draw = ImageDraw.Draw(img_pil)
 
