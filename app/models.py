@@ -78,6 +78,6 @@ class SiameseUNet(nn.Module):
 class DefectEmbedder(nn.Module):
     def __init__(self):
         super().__init__()
-        self.backbone = timm.create_model('efficientnet_b0', pretrained=False, num_classes=0)
+        self.backbone = timm.create_model('mobilenetv3_large_100', pretrained=False, num_classes=0)
 
     def forward(self, x): return self.backbone(x)

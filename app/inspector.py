@@ -12,7 +12,7 @@ from app.utils import align_images, image_to_base64, draw_text_bg
 
 
 class PCBInspector:
-    def __init__(self, min_threshold=0.55):
+    def __init__(self, min_threshold=0.166):
         print(">>> Initializing models...")
         self.min_threshold = min_threshold
         self._load_models()
@@ -30,7 +30,13 @@ class PCBInspector:
         # 2. Metric Embedder
         self.embedder = DefectEmbedder().to(DEVICE)
         emb_ckpt = torch.load(BACKBONE_PATH, map_location=DEVICE)
-        self.embedder.load_state_dict(emb_ckpt['model_state_dict'])
+
+        emb_state_dict = emb_ckpt.get('model_state_dict', emb_ckpt)
+
+        if list(emb_state_dict.keys())[0].startswith('module.'):
+            emb_state_dict = {k[7:]: v for k, v in emb_state_dict.items()}
+
+        self.embedder.load_state_dict(emb_state_dict)
         self.embedder.eval()
 
         # 3. Class Prototypes
