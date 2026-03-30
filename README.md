@@ -1,6 +1,4 @@
----
-
-# 🔍 Siamese Neural Network-Based Adaptive Approach for Open-Set Defect Detection in PCBs
+🔍 Siamese Neural Network-Based Adaptive Approach for Open-Set Defect Detection in PCBs
 
 ![Project Status](https://img.shields.io/badge/status-active-green)
 ![Python](https://img.shields.io/badge/python-3.8%2B-blue)
