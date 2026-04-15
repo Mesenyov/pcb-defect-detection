@@ -1,19 +1,47 @@
 import os
 import glob
 import cv2
+import time
+import asyncio
 from typing import Optional
+from contextlib import asynccontextmanager
 from fastapi import FastAPI, File, UploadFile, Form, HTTPException
 from fastapi.responses import HTMLResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
 import uvicorn
-from fastapi.concurrency import run_in_threadpool # ИМПОРТ ДЛЯ РАЗБЛОКИРОВКИ EVENT LOOP
+from fastapi.concurrency import run_in_threadpool
 
-from app.config import TEMPLATES_DIR, EXAMPLES_DIR, BASE_DIR
+from app.config import TEMPLATES_DIR, EXAMPLES_DIR, BASE_DIR, RESULTS_DIR
 from app.inspector import PCBInspector
-from app.utils import image_to_base64, read_imagefile # image_to_base64 нужен только для /api/examples
+from app.utils import image_to_base64, read_imagefile
 
-app = FastAPI(title="PCB Defect Detective")
+# --- АЛГОРИТМ ОЧИСТКИ (Фоновая задача) ---
+async def cleanup_results_task():
+    while True:
+        try:
+            now = time.time()
+            # Удаляем файлы старше 30 минут (1800 секунд)
+            for filename in os.listdir(RESULTS_DIR):
+                file_path = os.path.join(RESULTS_DIR, filename)
+                if os.path.isfile(file_path):
+                    if os.stat(file_path).st_mtime < now - 1800:
+                        os.remove(file_path)
+        except Exception as e:
+            print(f"Cleanup error: {e}")
+        # Ждем 10 минут перед следующей проверкой
+        await asyncio.sleep(600)
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # Запускается при старте сервера
+    task = asyncio.create_task(cleanup_results_task())
+    yield
+    # Запускается при выключении сервера
+    task.cancel()
+
+# Добавляем lifespan в приложение
+app = FastAPI(title="PCB Defect Detective", lifespan=lifespan)
 inspector = PCBInspector()
 
 app.mount("/static", StaticFiles(directory="static"), name="static")
@@ -65,7 +93,7 @@ async def analyze_pcb(
     template_image: Optional[UploadFile] = File(None),
     test_filename: Optional[str] = Form(None),
     template_filename: Optional[str] = Form(None),
-    lang: str = Form("en") # ПРИНИМАЕМ ЯЗЫК
+    lang: str = Form("en")
 ):
     img_test = None
     if test_image: img_test = read_imagefile(await test_image.read())
@@ -93,7 +121,6 @@ async def analyze_pcb(
         img_gold = cv2.resize(img_gold, (img_test.shape[1], img_test.shape[0]))
 
     try:
-        # ЗАПУСК В THREADPOOL И ПЕРЕДАЧА LANG
         result = await run_in_threadpool(inspector.predict_and_visualize, img_test, img_gold, lang)
         return JSONResponse(content=result)
     except Exception as e:

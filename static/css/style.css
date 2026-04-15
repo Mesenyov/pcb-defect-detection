@@ -583,7 +583,84 @@ h2 {
     margin-top: 5px;
 }
 
+/* --- НОВЫЕ СТИЛИ: ШИРОКИЙ БЛОК ДЛЯ ТАБЛИЦЫ --- */
+.result-item.wide {
+    max-width: 1400px; /* Растягиваем блок сильнее */
+    width: 100%;
+}
+
+.results-layout {
+    display: flex;
+    gap: 30px; /* Увеличили отступ между картинкой и таблицей */
+    align-items: flex-start;
+    width: 100%;
+}
+
+.image-wrapper {
+    flex: 3; /* Картинка теперь больше (60%) */
+}
+
+.table-wrapper {
+    flex: 2; /* Таблица занимает (40%) */
+    min-width: 350px; /* Таблица не будет сужаться сильнее этого значения */
+}
+
+.defect-table th, .defect-table td {
+    white-space: nowrap; /* Запрещаем тексту слипаться друг с другом в колонках */
+}
+
+/* --- МЕТКИ ДЛЯ СЛАЙДЕРА --- */
+.slider-label {
+    position: absolute;
+    top: 15px;
+    padding: 6px 12px;
+    background: rgba(0, 0, 0, 0.75);
+    color: var(--accent-color);
+    border: 1px solid var(--accent-color);
+    font-size: 0.9rem;
+    font-weight: bold;
+    border-radius: 4px;
+    z-index: 20;
+    pointer-events: none; /* Чтобы не мешали тянуть слайдер */
+}
+
+.slider-label.left { left: 15px; }
+.slider-label.right { right: 15px; z-index: 1; color: var(--text-dim); border-color: var(--text-dim); }
+
+/* --- ТОСТ (УВЕДОМЛЕНИЕ) --- */
+.toast {
+    position: fixed;
+    top: -100px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(13, 13, 13, 0.95);
+    color: var(--warning-color);
+    border: 1px solid var(--warning-color);
+    padding: 15px 30px;
+    border-radius: 5px;
+    z-index: 9999;
+    box-shadow: 0 0 15px rgba(255, 204, 0, 0.3);
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.4s cubic-bezier(0.4, 0.0, 0.2, 1);
+    text-align: center;
+    font-weight: bold;
+}
+
+.toast.show {
+    top: 90px; /* Опускаем ниже хедера */
+    opacity: 1;
+    visibility: visible;
+}
+
+
 @media (max-width: 768px) {
+    .results-layout { flex-direction: column; }
+
+    .image-wrapper, .table-wrapper { width: 100%; flex: auto; }
+
+    .toast.show { width: 90%; top: 120px; font-size: 0.85rem; }
+
     .results-layout {
         flex-direction: column;
     }

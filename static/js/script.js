@@ -1,4 +1,3 @@
-// --- ЛОКАЛИЗАЦИЯ (i18n) ---
 const dict = {
     en: {
         btn_choose_board: "[+] Choose board",
@@ -22,7 +21,7 @@ const dict = {
         res_class: "4. Classification Result",
         res_clean: "Inspection Result",
         alert_error: "Analysis Error: ",
-        footer_text: "Created by Efremenko & Mesenyov // 2026",
+        footer_text: "Created by Efremenko & Mesenyov // Scientific Advisor: Prof. I.N. Glukhikh, Dr.Sc. // 2026",
         verdict_defects: "⚠️ Defects detected: ",
         verdict_clean: "✅ No defects detected",
         tbl_type: "Defect Type",
@@ -30,7 +29,10 @@ const dict = {
         tbl_conf: "Confidence",
         lbl_ood: "UNKNOWN (OOD)",
         lbl_dist: "Dist: ",
-        lbl_thresh: "Thresh: "
+        lbl_thresh: "Thresh: ",
+        lbl_gold: "GOLDEN TEMPLATE",
+        lbl_test: "TEST BOARD",
+        toast_lang: "⚠️ To apply language changes to the image report, please refresh the page or run the analysis again."
     },
     ru: {
         btn_choose_board: "[+] Выбрать плату",
@@ -54,7 +56,7 @@ const dict = {
         res_class: "4. Результат классификации",
         res_clean: "Результат проверки",
         alert_error: "Ошибка анализа: ",
-        footer_text: "Создано Ефременко и Месенёвым // 2026",
+        footer_text: "Разработано: Ефременко, Месенёв // Науч. рук.: проф., д.т.н. Глухих И.Н. // 2026",
         verdict_defects: "⚠️ Обнаружено дефектов: ",
         verdict_clean: "✅ Дефектов не обнаружено",
         tbl_type: "Тип дефекта",
@@ -62,11 +64,26 @@ const dict = {
         tbl_conf: "Уверенность",
         lbl_ood: "НЕИЗВЕСТНО (OOD)",
         lbl_dist: "Дист: ",
-        lbl_thresh: "Порог: "
+        lbl_thresh: "Порог: ",
+        lbl_gold: "ЭТАЛОН",
+        lbl_test: "ТЕСТОВАЯ ПЛАТА",
+        toast_lang: "⚠️ Чтобы изменения вступили в силу на изображениях, необходимо перезагрузить страницу или запустить анализ заново."
     }
 };
 
 let currentLang = 'ru';
+let toastTimeout;
+
+function showToast(message) {
+    const toast = document.getElementById('toast');
+    if(!toast) return;
+    toast.innerHTML = message;
+    toast.classList.add('show');
+    clearTimeout(toastTimeout);
+    toastTimeout = setTimeout(() => {
+        toast.classList.remove('show');
+    }, 6000); // Скрываем через 6 секунд
+}
 
 function toggleLang() {
     setLang(currentLang === 'ru' ? 'en' : 'ru');
@@ -86,6 +103,11 @@ function setLang(lang) {
         else toggleElement.classList.remove('en-active');
     }
     updateStartButtonText();
+
+    // Если секция результатов открыта, показываем Тост (Предупреждение)
+    if (!sections.results.classList.contains('hidden')) {
+        showToast(dict[lang].toast_lang);
+    }
 }
 
 function updateStartButtonText() {
@@ -213,9 +235,7 @@ async function startAnalysis() {
 }
 
 async function sendAnalysisRequest(formData) {
-    // ПЕРЕДАЕМ ТЕКУЩИЙ ЯЗЫК НА БЕКЕНД
     formData.append('lang', currentLang);
-
     try {
         const response = await fetch('/api/analyze', { method: 'POST', body: formData });
         if (!response.ok) throw new Error(`Server Error: ${response.statusText}`);
@@ -243,30 +263,27 @@ function showResults(data) {
         verdictBox.innerHTML = d.verdict_clean;
     }
 
-    // 1. Создаем Интерактивный Слайдер
+    // Обрати внимание: Правая плашка лежит под левой. А левая "обрезается" вместе с картинкой эталона!
     const sliderDiv = document.createElement('div');
     sliderDiv.className = 'result-item';
     sliderDiv.innerHTML = `
         <h3>${d.res_compare}</h3>
         <div class="compare-container" id="compareContainer">
-            <!-- Нижняя картинка (Test) -->
             <img src="${data.images.test}" class="compare-img" alt="Test">
-            <!-- Верхняя картинка (Gold) с clip-path -->
+            <div class="slider-label right">${d.lbl_test}</div>
+
             <div class="img-overlay" id="imgOverlay">
                 <img src="${data.images.template}" class="compare-img" alt="Gold">
+                <div class="slider-label left">${d.lbl_gold}</div>
             </div>
-            <!-- Ползунок -->
+
             <div class="slider-handle" id="sliderHandle">
                 <div class="slider-button">↔</div>
             </div>
         </div>
-        <div style="display: flex; justify-content: space-between; font-size: 0.8rem; color: #888; margin-top: 5px;">
-            <span>← ${d.res_gold}</span><span>${d.res_test} →</span>
-        </div>
     `;
     stack.appendChild(sliderDiv);
 
-    // 2. Heatmap и Mask (если есть)
     const createStaticCard = (title, url) => {
         const div = document.createElement('div');
         div.className = 'result-item';
@@ -278,25 +295,21 @@ function showResults(data) {
         stack.appendChild(createStaticCard(d.res_heat, data.images.heatmap));
         stack.appendChild(createStaticCard(d.res_mask, data.images.mask_overlay));
 
-        // 3. Создаем Блок Интерактивной таблицы и финальной картинки
         const finalSection = document.createElement('div');
-        finalSection.className = 'result-item';
+        finalSection.className = 'result-item wide'; // ДОБАВЛЕН КЛАСС WIDE ДЛЯ ТАБЛИЦЫ
         finalSection.innerHTML = `<h3>${d.res_class}</h3>`;
 
         const layout = document.createElement('div');
         layout.className = 'results-layout';
 
-        // Контейнер картинки с оверлеями
         const imgWrap = document.createElement('div');
         imgWrap.className = 'image-wrapper';
         imgWrap.innerHTML = `<img src="${data.images.final}" alt="Final Result">`;
 
-        // Рендерим интерактивные bounding boxes
         data.detections.forEach((det, idx) => {
             const box = document.createElement('div');
             box.className = 'bbox-overlay';
             box.id = `bbox-${idx}`;
-            // Устанавливаем % для адаптивности!
             box.style.left = `${det.box_pct.x * 100}%`;
             box.style.top = `${det.box_pct.y * 100}%`;
             box.style.width = `${det.box_pct.w * 100}%`;
@@ -304,7 +317,6 @@ function showResults(data) {
             imgWrap.appendChild(box);
         });
 
-        // Контейнер Таблицы
         const tableWrap = document.createElement('div');
         tableWrap.className = 'table-wrapper';
         let tableHTML = `
@@ -336,7 +348,6 @@ function showResults(data) {
         finalSection.appendChild(layout);
         stack.appendChild(finalSection);
 
-        // Логика наведения (Hover) для таблицы
         setTimeout(() => {
             document.querySelectorAll('.defect-row').forEach(row => {
                 row.addEventListener('mouseenter', () => {
@@ -357,11 +368,9 @@ function showResults(data) {
     sections.results.classList.remove('hidden');
     sections.results.scrollIntoView({ behavior: 'smooth' });
 
-    // Инициализация логики слайдера (через небольшую задержку, чтобы DOM отрендерился)
     setTimeout(initCompareSlider, 100);
 }
 
-// --- ЛОГИКА ИНТЕРАКТИВНОГО СЛАЙДЕРА ---
 function initCompareSlider() {
     const container = document.getElementById('compareContainer');
     const overlay = document.getElementById('imgOverlay');
@@ -373,14 +382,13 @@ function initCompareSlider() {
     const moveSlider = (clientX) => {
         const rect = container.getBoundingClientRect();
         let x = clientX - rect.left;
-        x = Math.max(0, Math.min(x, rect.width)); // Ограничитель
+        x = Math.max(0, Math.min(x, rect.width));
         const percent = (x / rect.width) * 100;
 
         handle.style.left = `${percent}%`;
         overlay.style.clipPath = `polygon(0 0, ${percent}% 0, ${percent}% 100%, 0 100%)`;
     };
 
-    // События мыши (Desktop)
     handle.addEventListener('mousedown', (e) => { isDragging = true; e.preventDefault(); });
     window.addEventListener('mouseup', () => isDragging = false);
     window.addEventListener('mousemove', (e) => {
@@ -388,7 +396,6 @@ function initCompareSlider() {
         moveSlider(e.clientX);
     });
 
-    // События тача (Mobile)
     handle.addEventListener('touchstart', (e) => { isDragging = true; }, {passive: true});
     window.addEventListener('touchend', () => isDragging = false);
     window.addEventListener('touchmove', (e) => {
