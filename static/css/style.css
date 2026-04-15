@@ -648,52 +648,56 @@ h2 {
 }
 
 .toast.show {
-    top: 90px; /* Опускаем ниже хедера */
+    top: 90px;
     opacity: 1;
     visibility: visible;
 }
 
+.toast-progress {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    height: 4px;
+    background: var(--warning-color);
+    width: 100%;
+}
+
+.slider-label {
+    transition: opacity 0.3s ease;
+}
 
 @media (max-width: 768px) {
-    .results-layout { flex-direction: column; }
-
-    .image-wrapper, .table-wrapper { width: 100%; flex: auto; }
-
-    .toast.show { width: 90%; top: 120px; font-size: 0.85rem; }
-
-    .results-layout {
-        flex-direction: column;
-    }
-    .image-wrapper, .table-wrapper {
-        width: 100%;
-        flex: auto;
-    }
-
-    .header-center { position: static; transform: none; width: 100%; margin: 15px 0;}
-    .header-center .btn { width: 100%; }
-    .header-right { justify-content: flex-start; }
-
     header {
-        flex-direction: column;
+        flex-wrap: wrap; /* Позволяет элементам переноситься на новую строку */
         padding: 15px;
-        gap: 15px;
-        position: relative;
     }
 
-    .header-controls {
+    .brand {
+        order: 1; /* 1. Ставим логотип на первое место */
+        flex: 1;
+    }
+
+    .header-right {
+        order: 2; /* 2. Ставим переключатель сразу за логотипом (на той же строке) */
+        flex: unset;
+    }
+
+    .header-center {
+        order: 3; /* 3. Отправляем кнопку в самый низ */
+        width: 100%; /* Она занимает 100% и падает на вторую строку */
+        margin-top: 15px;
         position: static;
         transform: none;
-        width: 100%;
-        display: flex;
-        flex-direction: column;
-        gap: 10px;
     }
 
-    .header-controls .btn {
+    .header-center .btn {
         width: 100%;
-        text-align: center;
-        padding: 15px;
+        padding: 10px;
     }
+
+    .results-layout { flex-direction: column; }
+    .image-wrapper, .table-wrapper { width: 100%; flex: auto; }
+    .toast.show { width: 90%; top: 120px; font-size: 0.85rem; }
 
     main {
         padding: 20px 15px;

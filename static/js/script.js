@@ -73,17 +73,43 @@ const dict = {
 
 let currentLang = 'ru';
 let toastTimeout;
+const toast = document.getElementById('toast');
+const toastMsg = document.getElementById('toastMessage');
+const toastProg = document.querySelector('.toast-progress');
+
+function hideToast() {
+    if (!toast) return;
+    toast.classList.remove('show');
+    toastProg.style.transition = 'none';
+    clearTimeout(toastTimeout);
+}
 
 function showToast(message) {
-    const toast = document.getElementById('toast');
-    if(!toast) return;
-    toast.innerHTML = message;
+    if(!toast || !toastMsg || !toastProg) return;
+    toastMsg.innerHTML = message;
     toast.classList.add('show');
+
+    // Сброс и запуск прогресс-бара
+    toastProg.style.transition = 'none';
+    toastProg.style.width = '100%';
+
+    // Небольшая задержка, чтобы браузер успел отрисовать 100%, затем запускаем анимацию до 0%
+    setTimeout(() => {
+        toastProg.style.transition = 'width 6s linear';
+        toastProg.style.width = '0%';
+    }, 50);
+
     clearTimeout(toastTimeout);
-    toastTimeout = setTimeout(() => {
-        toast.classList.remove('show');
-    }, 6000); // Скрываем через 6 секунд
+    toastTimeout = setTimeout(hideToast, 6000);
 }
+
+// Глобальный слушатель кликов: если кликнули куда угодно, закрываем тост
+document.addEventListener('click', (e) => {
+    // Проверяем, что тост открыт и клик был НЕ по самому переключателю языка
+    if (toast && toast.classList.contains('show') && !e.target.closest('.lang-toggle')) {
+        hideToast();
+    }
+});
 
 function toggleLang() {
     setLang(currentLang === 'ru' ? 'en' : 'ru');
@@ -378,6 +404,15 @@ function initCompareSlider() {
     if(!container || !overlay || !handle) return;
 
     let isDragging = false;
+    let labelsHidden = false; // Флаг: скрыты ли метки
+    const labels = container.querySelectorAll('.slider-label');
+
+    const hideLabels = () => {
+        if (!labelsHidden) {
+            labels.forEach(lbl => lbl.style.opacity = '0');
+            labelsHidden = true;
+        }
+    };
 
     const moveSlider = (clientX) => {
         const rect = container.getBoundingClientRect();
@@ -389,14 +424,15 @@ function initCompareSlider() {
         overlay.style.clipPath = `polygon(0 0, ${percent}% 0, ${percent}% 100%, 0 100%)`;
     };
 
-    handle.addEventListener('mousedown', (e) => { isDragging = true; e.preventDefault(); });
+    // При первом касании/нажатии вызываем hideLabels()
+    handle.addEventListener('mousedown', (e) => { isDragging = true; hideLabels(); e.preventDefault(); });
     window.addEventListener('mouseup', () => isDragging = false);
     window.addEventListener('mousemove', (e) => {
         if (!isDragging) return;
         moveSlider(e.clientX);
     });
 
-    handle.addEventListener('touchstart', (e) => { isDragging = true; }, {passive: true});
+    handle.addEventListener('touchstart', (e) => { isDragging = true; hideLabels(); }, {passive: true});
     window.addEventListener('touchend', () => isDragging = false);
     window.addEventListener('touchmove', (e) => {
         if (!isDragging) return;
