@@ -6,6 +6,7 @@ from fastapi import FastAPI, File, UploadFile, Form, HTTPException
 from fastapi.responses import HTMLResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.concurrency import run_in_threadpool
 import uvicorn
 
 from app.config import TEMPLATES_DIR, EXAMPLES_DIR, BASE_DIR
@@ -112,7 +113,8 @@ async def analyze_pcb(
         img_gold = cv2.resize(img_gold, (img_test.shape[1], img_test.shape[0]))
 
     try:
-        return JSONResponse(content=inspector.predict_and_visualize(img_test, img_gold))
+        result = await run_in_threadpool(inspector.predict_and_visualize, img_test, img_gold)
+        return JSONResponse(content=result)
     except Exception as e:
         print(f"Error: {e}")
         raise HTTPException(status_code=500, detail=str(e))

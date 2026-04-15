@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PCB Defect Detective // Neural Core</title>
+    <title>PCB Defect Detective</title>
     <link rel="stylesheet" href="/static/css/style.css">
 </head>
 
@@ -14,53 +14,63 @@
     </div>
 
     <header>
-        <div class="brand">PCB<span>_DEFENDER</span> // v1.0</div>
-        <div class="header-controls">
+        <div class="brand">PCB<span>_DEFENDER</span></div>
+
+        <div class="header-center">
             <input type="file" id="pcbInput" accept="image/*">
-            <button class="btn" onclick="document.getElementById('pcbInput').click()">
-                [+] Choose board
+            <button class="btn" data-i18n="btn_choose_board" onclick="document.getElementById('pcbInput').click()">
+                [+] Выбрать плату
             </button>
+        </div>
+
+        <div class="header-right">
+            <div class="lang-toggle" onclick="toggleLang()">
+                <div class="lang-toggle-thumb"></div>
+                <span class="lang-text text-ru">RU</span>
+                <span class="lang-text text-en">EN</span>
+            </div>
         </div>
     </header>
 
     <main>
 
         <section id="examplesArea">
-            <h2>> EXAMPLES</h2>
+            <h2 data-i18n="examples_title">> EXAMPLES</h2>
             <div class="examples-grid" id="examplesGrid">
             </div>
 
-            <div
-                style="margin-bottom: 30px; text-align: center; color: var(--text-dim); border-bottom: 1px solid #333; padding-bottom: 20px;">
-                <p>Select an example above or upload your own image via the top menu.</p>
+            <div style="margin-bottom: 30px; text-align: center; color: var(--text-dim); border-bottom: 1px solid #333; padding-bottom: 20px;">
+                <p data-i18n="examples_desc">Select an example above or upload your own image via the top menu.</p>
             </div>
         </section>
 
         <section id="templateArea" class="hidden fade-in">
-            <h2>> TEMPLATE SELECTION</h2>
+            <h2 data-i18n="template_title">> TEMPLATE SELECTION</h2>
 
             <div class="template-selection">
-                <p style="color: var(--accent-color)">Test board: <span id="selectedFileName"
-                        style="color: white">file.jpg</span></p>
-                <p style="margin-top: 10px; font-size: 0.9rem;">Select a golden template from the database or upload your own:</p>
+                <p style="color: var(--accent-color)">
+                    <span data-i18n="test_board_lbl">Test board:</span>
+                    <span id="selectedFileName" style="color: white">file.jpg</span>
+                </p>
+                <p style="margin-top: 10px; font-size: 0.9rem;" data-i18n="template_desc">Select a golden template from the database or upload your own:</p>
 
                 <div class="template-grid" id="templateGrid">
                 </div>
 
                 <div class="action-bar">
-                    <button class="btn btn-secondary" onclick="resetUI()">
-                        < CANCEL </button>
+                    <button class="btn btn-secondary" data-i18n="btn_cancel" onclick="resetUI()">
+                        < CANCEL
+                    </button>
 
-                            <div style="display: flex; gap: 10px;">
-                                <input type="file" id="customTemplateInput" accept="image/*">
-                                <button class="btn btn-secondary"
-                                    onclick="document.getElementById('customTemplateInput').click()">
-                                    Upload Custom Template
-                                </button>
-                                <button class="btn" id="startAnalysisBtn" onclick="startAnalysis()" disabled>
-                                    START ANALYSIS >
-                                </button>
-                            </div>
+                    <div style="display: flex; gap: 10px;">
+                        <input type="file" id="customTemplateInput" accept="image/*">
+                        <button class="btn btn-secondary" data-i18n="btn_upload_custom" onclick="document.getElementById('customTemplateInput').click()">
+                            Upload Custom Template
+                        </button>
+                        <button class="btn" id="startAnalysisBtn" onclick="startAnalysis()" disabled data-i18n="btn_start_analysis">
+                            START ANALYSIS >
+                        </button>
+                    </div>
                 </div>
             </div>
         </section>
@@ -68,14 +78,14 @@
         <section id="loadingArea" class="hidden">
             <div class="loader-container">
                 <div class="scan-line"></div>
-                <div class="terminal-text">
+                <div class="terminal-text" data-i18n="loading_text">
                     ANALYZING BOARD...
                 </div>
             </div>
         </section>
 
         <section id="resultsArea" class="hidden fade-in">
-            <h2>> ANALYSIS REPORT</h2>
+            <h2 data-i18n="results_title">> ANALYSIS REPORT</h2>
 
             <div id="verdictBox" class="verdict-box">
             </div>

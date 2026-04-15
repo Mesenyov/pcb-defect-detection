@@ -60,8 +60,8 @@ class PCBInspector:
 
     def predict_and_visualize(self, test_img, gold_img):
         # Image alignment
-        test_img = align_images(test_img, gold_img)
-        if test_img is None: test_img = gold_img.copy()
+        # test_img = align_images(test_img, gold_img)
+        # if test_img is None: test_img = gold_img.copy()
 
         # Preprocessing
         test_rgb = cv2.cvtColor(test_img, cv2.COLOR_BGR2RGB)
