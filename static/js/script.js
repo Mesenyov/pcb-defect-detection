@@ -14,16 +14,23 @@ const dict = {
         results_title: "> ANALYSIS REPORT",
         start_custom: "START ANALYSIS (Custom: {name}) >",
         start_tpl: "START ANALYSIS ({name}) >",
-        res_test: "1. Test Board",
-        res_gold: "2. Golden Template",
-        res_heat: "3. Heatmap (Differences)",
-        res_mask: "4. Defect Mask",
-        res_class: "5. Classification (Result)",
-        res_class_desc: "Red bounding box = Known defect, Yellow bounding box = Unknown (OOD)",
+        res_test: "Test Board",
+        res_gold: "Golden Template",
+        res_compare: "1. Comparison Slider (Test vs Golden)",
+        res_heat: "2. Heatmap (Differences)",
+        res_mask: "3. Defect Mask",
+        res_class: "4. Classification Result",
         res_clean: "Inspection Result",
         alert_error: "Analysis Error: ",
+        footer_text: "Created by Efremenko & Mesenyov // 2026",
         verdict_defects: "⚠️ Defects detected: ",
-        verdict_clean: "✅ No defects detected"
+        verdict_clean: "✅ No defects detected",
+        tbl_type: "Defect Type",
+        tbl_pos: "Position",
+        tbl_conf: "Confidence",
+        lbl_ood: "UNKNOWN (OOD)",
+        lbl_dist: "Dist: ",
+        lbl_thresh: "Thresh: "
     },
     ru: {
         btn_choose_board: "[+] Выбрать плату",
@@ -39,24 +46,30 @@ const dict = {
         results_title: "> ОТЧЕТ АНАЛИЗА",
         start_custom: "ЗАПУСТИТЬ АНАЛИЗ (Свой: {name}) >",
         start_tpl: "ЗАПУСТИТЬ АНАЛИЗ ({name}) >",
-        res_test: "1. Тестируемая плата",
-        res_gold: "2. Эталонная плата",
-        res_heat: "3. Heatmap (Различия)",
-        res_mask: "4. Маска дефектов",
-        res_class: "5. Классификация (Результат)",
-        res_class_desc: "Красная рамка = Известный дефект, Желтая рамка = Неизвестный (OOD)",
+        res_test: "Тестируемая плата",
+        res_gold: "Эталонная плата",
+        res_compare: "1. Интерактивное сравнение (Слайдер)",
+        res_heat: "2. Heatmap (Различия)",
+        res_mask: "3. Маска дефектов",
+        res_class: "4. Результат классификации",
         res_clean: "Результат проверки",
         alert_error: "Ошибка анализа: ",
+        footer_text: "Создано Ефременко и Месенёвым // 2026",
         verdict_defects: "⚠️ Обнаружено дефектов: ",
-        verdict_clean: "✅ Дефектов не обнаружено"
+        verdict_clean: "✅ Дефектов не обнаружено",
+        tbl_type: "Тип дефекта",
+        tbl_pos: "Позиция",
+        tbl_conf: "Уверенность",
+        lbl_ood: "НЕИЗВЕСТНО (OOD)",
+        lbl_dist: "Дист: ",
+        lbl_thresh: "Порог: "
     }
 };
 
-let currentLang = 'en';
+let currentLang = 'ru';
 
 function toggleLang() {
-    const newLang = currentLang === 'ru' ? 'en' : 'ru';
-    setLang(newLang);
+    setLang(currentLang === 'ru' ? 'en' : 'ru');
 }
 
 function setLang(lang) {
@@ -64,37 +77,26 @@ function setLang(lang) {
 
     document.querySelectorAll('[data-i18n]').forEach(el => {
         const key = el.getAttribute('data-i18n');
-        if (dict[lang][key]) {
-            el.innerHTML = dict[lang][key];
-        }
+        if (dict[lang][key]) el.innerHTML = dict[lang][key];
     });
 
     const toggleElement = document.querySelector('.lang-toggle');
-    if (lang === 'en') {
-        toggleElement.classList.add('en-active');
-    } else {
-        toggleElement.classList.remove('en-active');
+    if (toggleElement) {
+        if (lang === 'en') toggleElement.classList.add('en-active');
+        else toggleElement.classList.remove('en-active');
     }
-
     updateStartButtonText();
 }
 
 function updateStartButtonText() {
     if (!startBtn) return;
-    if (startBtn.disabled) {
-        startBtn.innerHTML = dict[currentLang].btn_start_analysis;
-    } else if (currentTemplateFile) {
-        startBtn.innerHTML = dict[currentLang].start_custom.replace('{name}', currentTemplateFile.name);
-    } else if (currentTemplateName) {
-        startBtn.innerHTML = dict[currentLang].start_tpl.replace('{name}', currentTemplateName);
-    }
+    if (startBtn.disabled) startBtn.innerHTML = dict[currentLang].btn_start_analysis;
+    else if (currentTemplateFile) startBtn.innerHTML = dict[currentLang].start_custom.replace('{name}', currentTemplateFile.name);
+    else if (currentTemplateName) startBtn.innerHTML = dict[currentLang].start_tpl.replace('{name}', currentTemplateName);
 }
 
-let currentTestFile = null;
-let currentExampleName = null;
-
-let currentTemplateFile = null;
-let currentTemplateName = null;
+let currentTestFile = null, currentExampleName = null;
+let currentTemplateFile = null, currentTemplateName = null;
 
 const sections = {
     template: document.getElementById('templateArea'),
@@ -112,19 +114,15 @@ async function loadExamples() {
         const res = await fetch('/api/examples');
         const data = await res.json();
         examplesGrid.innerHTML = '';
-
         data.forEach(ex => {
             const card = document.createElement('div');
             card.className = 'example-card';
             card.title = ex.name;
             card.onclick = () => runExample(ex.name);
-            card.innerHTML = `
-                <img src="${ex.src}" alt="${ex.name}">
-                <span>${ex.name}</span>
-            `;
+            card.innerHTML = `<img src="${ex.src}" alt="${ex.name}"><span>${ex.name}</span>`;
             examplesGrid.appendChild(card);
         });
-    } catch (e) { console.error("Error loading examples:", e); }
+    } catch (e) { console.error(e); }
 }
 
 async function loadTemplates() {
@@ -132,23 +130,19 @@ async function loadTemplates() {
         const res = await fetch('/api/templates');
         const data = await res.json();
         templateGrid.innerHTML = '';
-
         data.forEach(tpl => {
             const card = document.createElement('div');
             card.className = 'template-card';
             card.onclick = () => selectTemplate(card, tpl.name);
-            card.innerHTML = `
-                <img src="${tpl.src}" alt="${tpl.name}">
-                <div style="text-align:center; padding:5px; color:#888;">${tpl.name}</div>
-            `;
+            card.innerHTML = `<img src="${tpl.src}" alt="${tpl.name}"><div style="text-align:center; padding:5px; color:#888;">${tpl.name}</div>`;
             templateGrid.appendChild(card);
         });
-    } catch (e) { console.error("Error loading templates:", e); }
+    } catch (e) { console.error(e); }
 }
 
 loadExamples();
 loadTemplates();
-setLang('ru'); // Устанавливаем язык по умолчанию
+setLang('ru');
 
 pcbInput.addEventListener('change', (e) => {
     if (e.target.files && e.target.files[0]) {
@@ -169,17 +163,12 @@ customTemplateInput.addEventListener('change', (e) => {
     }
 });
 
-function hideAllDynamicSections() {
-    Object.values(sections).forEach(el => el.classList.add('hidden'));
-}
+function hideAllDynamicSections() { Object.values(sections).forEach(el => el.classList.add('hidden')); }
 
 function resetUI() {
-    pcbInput.value = '';
-    customTemplateInput.value = '';
-    currentTestFile = null;
-    currentTemplateFile = null;
-    currentExampleName = null;
-    currentTemplateName = null;
+    pcbInput.value = ''; customTemplateInput.value = '';
+    currentTestFile = null; currentTemplateFile = null;
+    currentExampleName = null; currentTemplateName = null;
     hideAllDynamicSections();
 }
 
@@ -187,9 +176,7 @@ function showTemplateSelection(filename) {
     hideAllDynamicSections();
     document.getElementById('selectedFileName').textContent = filename;
     sections.template.classList.remove('hidden');
-
     sections.template.scrollIntoView({ behavior: 'smooth' });
-
     startBtn.disabled = true;
     updateStartButtonText();
     document.querySelectorAll('.template-card').forEach(c => c.classList.remove('selected'));
@@ -198,7 +185,6 @@ function showTemplateSelection(filename) {
 function selectTemplate(cardElement, templateName) {
     document.querySelectorAll('.template-card').forEach(c => c.classList.remove('selected'));
     cardElement.classList.add('selected');
-
     currentTemplateFile = null;
     currentTemplateName = templateName;
     startBtn.disabled = false;
@@ -206,55 +192,36 @@ function selectTemplate(cardElement, templateName) {
 }
 
 async function runExample(exampleName) {
-    console.log("Running Example:", exampleName);
-
     sections.template.classList.add('hidden');
     sections.results.classList.add('hidden');
     sections.loading.classList.remove('hidden');
     sections.loading.scrollIntoView({ behavior: 'smooth' });
-
     const formData = new FormData();
     formData.append('test_filename', exampleName);
     formData.append('template_filename', 'AUTO_DETECT');
-
     await sendAnalysisRequest(formData);
 }
 
 async function startAnalysis() {
     sections.template.classList.add('hidden');
     sections.loading.classList.remove('hidden');
-
     const formData = new FormData();
-
-    if (currentTestFile) {
-        formData.append('test_image', currentTestFile);
-    }
-
-    if (currentTemplateFile) {
-        formData.append('template_image', currentTemplateFile);
-    } else if (currentTemplateName) {
-        formData.append('template_filename', currentTemplateName);
-    }
-
+    if (currentTestFile) formData.append('test_image', currentTestFile);
+    if (currentTemplateFile) formData.append('template_image', currentTemplateFile);
+    else if (currentTemplateName) formData.append('template_filename', currentTemplateName);
     await sendAnalysisRequest(formData);
 }
 
 async function sendAnalysisRequest(formData) {
+    // ПЕРЕДАЕМ ТЕКУЩИЙ ЯЗЫК НА БЕКЕНД
+    formData.append('lang', currentLang);
+
     try {
-        const response = await fetch('/api/analyze', {
-            method: 'POST',
-            body: formData
-        });
-
-        if (!response.ok) {
-            throw new Error(`Server Error: ${response.statusText}`);
-        }
-
+        const response = await fetch('/api/analyze', { method: 'POST', body: formData });
+        if (!response.ok) throw new Error(`Server Error: ${response.statusText}`);
         const result = await response.json();
         showResults(result);
-
     } catch (error) {
-        console.error(error);
         alert(dict[currentLang].alert_error + error.message);
         sections.loading.classList.add('hidden');
     }
@@ -262,15 +229,12 @@ async function sendAnalysisRequest(formData) {
 
 function showResults(data) {
     sections.loading.classList.add('hidden');
-
     const verdictBox = document.getElementById('verdictBox');
     const stack = document.getElementById('imagesStack');
     stack.innerHTML = '';
-
     const d = dict[currentLang];
 
     const defectsCount = data.detections ? data.detections.length : 0;
-
     if (data.has_defects) {
         verdictBox.className = 'verdict-box defects';
         verdictBox.innerHTML = d.verdict_defects + defectsCount;
@@ -279,38 +243,162 @@ function showResults(data) {
         verdictBox.innerHTML = d.verdict_clean;
     }
 
-    const createCard = (title, b64, extra = "") => {
+    // 1. Создаем Интерактивный Слайдер
+    const sliderDiv = document.createElement('div');
+    sliderDiv.className = 'result-item';
+    sliderDiv.innerHTML = `
+        <h3>${d.res_compare}</h3>
+        <div class="compare-container" id="compareContainer">
+            <!-- Нижняя картинка (Test) -->
+            <img src="${data.images.test}" class="compare-img" alt="Test">
+            <!-- Верхняя картинка (Gold) с clip-path -->
+            <div class="img-overlay" id="imgOverlay">
+                <img src="${data.images.template}" class="compare-img" alt="Gold">
+            </div>
+            <!-- Ползунок -->
+            <div class="slider-handle" id="sliderHandle">
+                <div class="slider-button">↔</div>
+            </div>
+        </div>
+        <div style="display: flex; justify-content: space-between; font-size: 0.8rem; color: #888; margin-top: 5px;">
+            <span>← ${d.res_gold}</span><span>${d.res_test} →</span>
+        </div>
+    `;
+    stack.appendChild(sliderDiv);
+
+    // 2. Heatmap и Mask (если есть)
+    const createStaticCard = (title, url) => {
         const div = document.createElement('div');
         div.className = 'result-item';
-        div.innerHTML = `
-            <h3>${title}</h3>
-            <img src="data:image/jpeg;base64,${b64}">
-            ${extra ? `<div style="padding:10px; color:#888; font-size:0.8rem">${extra}</div>` : ''}
-        `;
+        div.innerHTML = `<h3>${title}</h3><img src="${url}">`;
         return div;
     };
 
-    stack.appendChild(createCard(d.res_test, data.images.test));
-    stack.appendChild(createCard(d.res_gold, data.images.template));
-
     if (data.has_defects) {
-        stack.appendChild(createCard(d.res_heat, data.images.heatmap));
-        stack.appendChild(createCard(d.res_mask, data.images.mask_overlay));
-        stack.appendChild(createCard(d.res_class, data.images.final, d.res_class_desc));
+        stack.appendChild(createStaticCard(d.res_heat, data.images.heatmap));
+        stack.appendChild(createStaticCard(d.res_mask, data.images.mask_overlay));
+
+        // 3. Создаем Блок Интерактивной таблицы и финальной картинки
+        const finalSection = document.createElement('div');
+        finalSection.className = 'result-item';
+        finalSection.innerHTML = `<h3>${d.res_class}</h3>`;
+
+        const layout = document.createElement('div');
+        layout.className = 'results-layout';
+
+        // Контейнер картинки с оверлеями
+        const imgWrap = document.createElement('div');
+        imgWrap.className = 'image-wrapper';
+        imgWrap.innerHTML = `<img src="${data.images.final}" alt="Final Result">`;
+
+        // Рендерим интерактивные bounding boxes
+        data.detections.forEach((det, idx) => {
+            const box = document.createElement('div');
+            box.className = 'bbox-overlay';
+            box.id = `bbox-${idx}`;
+            // Устанавливаем % для адаптивности!
+            box.style.left = `${det.box_pct.x * 100}%`;
+            box.style.top = `${det.box_pct.y * 100}%`;
+            box.style.width = `${det.box_pct.w * 100}%`;
+            box.style.height = `${det.box_pct.h * 100}%`;
+            imgWrap.appendChild(box);
+        });
+
+        // Контейнер Таблицы
+        const tableWrap = document.createElement('div');
+        tableWrap.className = 'table-wrapper';
+        let tableHTML = `
+            <table class="defect-table">
+                <tr><th>#</th><th>${d.tbl_type}</th><th>${d.tbl_conf}</th><th>${d.tbl_pos}</th></tr>
+        `;
+
+        data.detections.forEach((det, idx) => {
+            let typeHtml = det.class;
+            if (det.is_unknown) {
+                typeHtml += `<br><span class="tag-ood">${d.lbl_ood}</span>`;
+                typeHtml += `<br><span style="font-size:0.75rem; color:#888;">${d.lbl_dist}${det.distance} / ${d.lbl_thresh}${det.threshold}</span>`;
+            }
+
+            tableHTML += `
+                <tr class="defect-row" data-idx="${idx}">
+                    <td>${idx + 1}</td>
+                    <td><b>${typeHtml}</b></td>
+                    <td style="color:${det.confidence > 80 ? 'var(--accent-color)' : 'var(--warning-color)'}">${det.confidence}%</td>
+                    <td style="font-size:0.8rem; color:#888;">X:${det.box_px.x}<br>Y:${det.box_px.y}</td>
+                </tr>
+            `;
+        });
+        tableHTML += `</table>`;
+        tableWrap.innerHTML = tableHTML;
+
+        layout.appendChild(imgWrap);
+        layout.appendChild(tableWrap);
+        finalSection.appendChild(layout);
+        stack.appendChild(finalSection);
+
+        // Логика наведения (Hover) для таблицы
+        setTimeout(() => {
+            document.querySelectorAll('.defect-row').forEach(row => {
+                row.addEventListener('mouseenter', () => {
+                    const idx = row.getAttribute('data-idx');
+                    document.getElementById(`bbox-${idx}`).classList.add('highlight');
+                });
+                row.addEventListener('mouseleave', () => {
+                    const idx = row.getAttribute('data-idx');
+                    document.getElementById(`bbox-${idx}`).classList.remove('highlight');
+                });
+            });
+        }, 100);
+
     } else {
-        stack.appendChild(createCard(d.res_clean, data.images.final));
+        stack.appendChild(createStaticCard(d.res_clean, data.images.final));
     }
 
     sections.results.classList.remove('hidden');
     sections.results.scrollIntoView({ behavior: 'smooth' });
+
+    // Инициализация логики слайдера (через небольшую задержку, чтобы DOM отрендерился)
+    setTimeout(initCompareSlider, 100);
+}
+
+// --- ЛОГИКА ИНТЕРАКТИВНОГО СЛАЙДЕРА ---
+function initCompareSlider() {
+    const container = document.getElementById('compareContainer');
+    const overlay = document.getElementById('imgOverlay');
+    const handle = document.getElementById('sliderHandle');
+    if(!container || !overlay || !handle) return;
+
+    let isDragging = false;
+
+    const moveSlider = (clientX) => {
+        const rect = container.getBoundingClientRect();
+        let x = clientX - rect.left;
+        x = Math.max(0, Math.min(x, rect.width)); // Ограничитель
+        const percent = (x / rect.width) * 100;
+
+        handle.style.left = `${percent}%`;
+        overlay.style.clipPath = `polygon(0 0, ${percent}% 0, ${percent}% 100%, 0 100%)`;
+    };
+
+    // События мыши (Desktop)
+    handle.addEventListener('mousedown', (e) => { isDragging = true; e.preventDefault(); });
+    window.addEventListener('mouseup', () => isDragging = false);
+    window.addEventListener('mousemove', (e) => {
+        if (!isDragging) return;
+        moveSlider(e.clientX);
+    });
+
+    // События тача (Mobile)
+    handle.addEventListener('touchstart', (e) => { isDragging = true; }, {passive: true});
+    window.addEventListener('touchend', () => isDragging = false);
+    window.addEventListener('touchmove', (e) => {
+        if (!isDragging) return;
+        moveSlider(e.touches[0].clientX);
+    }, {passive: true});
 }
 
 const backToTopBtn = document.getElementById('backToTop');
-
 window.addEventListener('scroll', () => {
-    if (window.scrollY > 300) {
-        backToTopBtn.classList.add('visible');
-    } else {
-        backToTopBtn.classList.remove('visible');
-    }
+    if (window.scrollY > 300) backToTopBtn.classList.add('visible');
+    else backToTopBtn.classList.remove('visible');
 });
