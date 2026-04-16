@@ -71,7 +71,7 @@ const dict = {
     }
 };
 
-let currentLang = 'ru';
+let currentLang = localStorage.getItem('lang') || 'ru';
 let toastTimeout;
 const toast = document.getElementById('toast');
 const toastMsg = document.getElementById('toastMessage');
@@ -117,6 +117,7 @@ function toggleLang() {
 
 function setLang(lang) {
     currentLang = lang;
+    localStorage.setItem('lang', lang);
 
     document.querySelectorAll('[data-i18n]').forEach(el => {
         const key = el.getAttribute('data-i18n');
@@ -375,7 +376,9 @@ function showResults(data) {
         stack.appendChild(finalSection);
 
         setTimeout(() => {
-            document.querySelectorAll('.defect-row').forEach(row => {
+            const rows = document.querySelectorAll('.defect-row');
+            rows.forEach(row => {
+                // Для компьютеров (наведение)
                 row.addEventListener('mouseenter', () => {
                     const idx = row.getAttribute('data-idx');
                     document.getElementById(`bbox-${idx}`).classList.add('highlight');
@@ -383,6 +386,15 @@ function showResults(data) {
                 row.addEventListener('mouseleave', () => {
                     const idx = row.getAttribute('data-idx');
                     document.getElementById(`bbox-${idx}`).classList.remove('highlight');
+                });
+
+                // Для мобильных устройств (клик/тач)
+                row.addEventListener('click', () => {
+                    // Сначала убираем подсветку со всех
+                    document.querySelectorAll('.bbox-overlay').forEach(b => b.classList.remove('highlight'));
+                    // Подсвечиваем ту, на которую кликнули
+                    const idx = row.getAttribute('data-idx');
+                    document.getElementById(`bbox-${idx}`).classList.add('highlight');
                 });
             });
         }, 100);

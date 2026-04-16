@@ -3,7 +3,7 @@ import numpy as np
 import uuid
 import os
 from PIL import Image, ImageDraw, ImageFont
-from app.config import RESULTS_DIR
+from app.config import RESULTS_DIR, BASE_DIR
 import base64
 
 def align_images(img_test, img_gold):
@@ -43,24 +43,39 @@ def read_imagefile(file_bytes) -> np.ndarray:
     nparr = np.frombuffer(file_bytes, np.uint8)
     return cv2.imdecode(nparr, cv2.IMREAD_COLOR)
 
+
 def draw_text_bg(img_bgr, text, xy, text_color=(0, 0, 0), bg_color=None, font_size=20):
-    # Оставляем без изменений
     img_pil = Image.fromarray(cv2.cvtColor(img_bgr, cv2.COLOR_BGR2RGB))
     draw = ImageDraw.Draw(img_pil)
+
+    # Жестко указываем путь к нашему шрифту
+    font_path = os.path.join(BASE_DIR, 'static', 'fonts', 'Roboto-Regular.ttf')
+
     try:
-        font = ImageFont.truetype("arial.ttf", font_size)
+        font = ImageFont.truetype(font_path, font_size)
     except IOError:
+        print(f"ВНИМАНИЕ: Шрифт {font_path} не найден! Использую системный.")
         font = ImageFont.load_default()
-    bbox = font.getbbox(text)
-    text_width = bbox[2] - bbox[0]
+
+    # В новых версиях Pillow (>= 10.0.0) для получения размеров текста используется textbbox
+    try:
+        bbox = draw.textbbox((0, 0), text, font=font)
+        text_width = bbox[2] - bbox[0]
+        text_height = bbox[3] - bbox[1]
+    except AttributeError:
+        # Для старых версий Pillow
+        text_width, text_height = font.getsize(text)
+
     x, y = xy
     if bg_color is not None:
         pad_x, pad_y = 10, 5
         bg_rgb = bg_color[::-1]
-        rect = (x - pad_x, y + bbox[1] - pad_y, x + text_width + pad_x, y + bbox[3] + pad_y)
+        # Корректируем рамку под новые методы Pillow
+        rect = (x - pad_x, y - pad_y, x + text_width + pad_x, y + text_height + pad_y)
         draw.rectangle(rect, fill=bg_rgb)
+
     text_rgb = text_color[::-1]
-    draw.text(xy, text, font=font, fill=text_rgb)
+    draw.text((x, y), text, font=font, fill=text_rgb)
     return cv2.cvtColor(np.array(img_pil), cv2.COLOR_RGB2BGR)
 
 def image_to_base64(img_bgr):

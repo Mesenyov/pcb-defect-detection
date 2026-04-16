@@ -30,6 +30,6 @@ CLASS_DISPLAY_NAMES = {
         'short': 'Короткое замыкание',
         'spur': 'Заусенец',
         'spurious_copper': 'Лишняя медь',
-        'Unknown': 'НЕИЗВЕСТНЫЙ ДЕФЕКТ'
+        'Unknown': 'Неизвестный дефект'
     }
 }
