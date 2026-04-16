@@ -438,7 +438,6 @@ h2 {
     background: var(--accent-color);
 }
 
-/* --- СЛАЙДЕР СРАВНЕНИЯ (BEFORE/AFTER) --- */
 .compare-container {
     position: relative;
     width: 100%;
@@ -497,7 +496,6 @@ h2 {
     font-size: 1.2rem;
 }
 
-/* --- ИНТЕРАКТИВНЫЕ РЕЗУЛЬТАТЫ (КАРТИНКА + ТАБЛИЦА) --- */
 .results-layout {
     display: flex;
     gap: 20px;
@@ -508,7 +506,7 @@ h2 {
 
 .image-wrapper {
     position: relative;
-    flex: 2; /* Картинка занимает 2/3 */
+    flex: 2;
     border: 1px solid var(--text-dim);
     background: #000;
 }
@@ -518,24 +516,22 @@ h2 {
     display: block;
 }
 
-/* Интерактивная обводка, которая появляется при наведении на таблицу */
 .bbox-overlay {
     position: absolute;
     border: 3px solid transparent;
     transition: all 0.2s ease;
-    pointer-events: none; /* Чтобы клики проходили сквозь неё */
+    pointer-events: none;
     z-index: 5;
 }
 
 .bbox-overlay.highlight {
-    border-color: #ff00ff; /* Яркий маджента для подсветки */
+    border-color: #ff00ff;
     box-shadow: 0 0 15px rgba(255, 0, 255, 0.8), inset 0 0 15px rgba(255, 0, 255, 0.4);
     background: rgba(255, 0, 255, 0.1);
 }
 
-/* Таблица */
 .table-wrapper {
-    flex: 1; /* Таблица занимает 1/3 */
+    flex: 1;
     background: var(--panel-color);
     border: 1px solid var(--accent-dim);
     padding: 15px;
@@ -583,33 +579,31 @@ h2 {
     margin-top: 5px;
 }
 
-/* --- НОВЫЕ СТИЛИ: ШИРОКИЙ БЛОК ДЛЯ ТАБЛИЦЫ --- */
 .result-item.wide {
-    max-width: 1400px; /* Растягиваем блок сильнее */
+    max-width: 1400px;
     width: 100%;
 }
 
 .results-layout {
     display: flex;
-    gap: 30px; /* Увеличили отступ между картинкой и таблицей */
+    gap: 30px;
     align-items: flex-start;
     width: 100%;
 }
 
 .image-wrapper {
-    flex: 3; /* Картинка теперь больше (60%) */
+    flex: 3;
 }
 
 .table-wrapper {
-    flex: 2; /* Таблица занимает (40%) */
-    min-width: 350px; /* Таблица не будет сужаться сильнее этого значения */
+    flex: 2;
+    min-width: 350px;
 }
 
 .defect-table th, .defect-table td {
-    white-space: nowrap; /* Запрещаем тексту слипаться друг с другом в колонках */
+    white-space: nowrap;
 }
 
-/* --- МЕТКИ ДЛЯ СЛАЙДЕРА --- */
 .slider-label {
     position: absolute;
     top: 15px;
@@ -621,7 +615,7 @@ h2 {
     font-weight: bold;
     border-radius: 4px;
     z-index: 20;
-    pointer-events: none; /* Чтобы не мешали тянуть слайдер */
+    pointer-events: none;
 }
 
 .slider-label.left { left: 15px; }
@@ -668,23 +662,23 @@ h2 {
 
 @media (max-width: 768px) {
     header {
-        flex-wrap: wrap; /* Позволяет элементам переноситься на новую строку */
+        flex-wrap: wrap;
         padding: 15px;
     }
 
     .brand {
-        order: 1; /* 1. Ставим логотип на первое место */
+        order: 1;
         flex: 1;
     }
 
     .header-right {
-        order: 2; /* 2. Ставим переключатель сразу за логотипом (на той же строке) */
+        order: 2;
         flex: unset;
     }
 
     .header-center {
-        order: 3; /* 3. Отправляем кнопку в самый низ */
-        width: 100%; /* Она занимает 100% и падает на вторую строку */
+        order: 3;
+        width: 100%;
         margin-top: 15px;
         position: static;
         transform: none;

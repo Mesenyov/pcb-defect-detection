@@ -7,7 +7,6 @@ from app.config import RESULTS_DIR, BASE_DIR
 import base64
 
 def align_images(img_test, img_gold):
-    # Оставляем без изменений, хотя вы отключили использование
     if img_test is None: return img_gold
     if img_gold is None: return img_test
     try:
@@ -32,7 +31,6 @@ def align_images(img_test, img_gold):
         print(f"Alignment warning: {e}")
         return img_test
 
-# --- НОВАЯ ФУНКЦИЯ СОХРАНЕНИЯ ---
 def save_result_image(img_bgr, prefix):
     filename = f"{prefix}_{uuid.uuid4().hex[:8]}.jpg"
     filepath = os.path.join(RESULTS_DIR, filename)
@@ -48,7 +46,6 @@ def draw_text_bg(img_bgr, text, xy, text_color=(0, 0, 0), bg_color=None, font_si
     img_pil = Image.fromarray(cv2.cvtColor(img_bgr, cv2.COLOR_BGR2RGB))
     draw = ImageDraw.Draw(img_pil)
 
-    # Жестко указываем путь к нашему шрифту
     font_path = os.path.join(BASE_DIR, 'static', 'fonts', 'Roboto-Regular.ttf')
 
     try:
@@ -57,20 +54,17 @@ def draw_text_bg(img_bgr, text, xy, text_color=(0, 0, 0), bg_color=None, font_si
         print(f"ВНИМАНИЕ: Шрифт {font_path} не найден! Использую системный.")
         font = ImageFont.load_default()
 
-    # В новых версиях Pillow (>= 10.0.0) для получения размеров текста используется textbbox
     try:
         bbox = draw.textbbox((0, 0), text, font=font)
         text_width = bbox[2] - bbox[0]
         text_height = bbox[3] - bbox[1]
     except AttributeError:
-        # Для старых версий Pillow
         text_width, text_height = font.getsize(text)
 
     x, y = xy
     if bg_color is not None:
         pad_x, pad_y = 10, 5
         bg_rgb = bg_color[::-1]
-        # Корректируем рамку под новые методы Pillow
         rect = (x - pad_x, y - pad_y, x + text_width + pad_x, y + text_height + pad_y)
         draw.rectangle(rect, fill=bg_rgb)
 

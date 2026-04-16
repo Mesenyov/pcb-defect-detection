@@ -16,12 +16,10 @@ from app.config import TEMPLATES_DIR, EXAMPLES_DIR, BASE_DIR, RESULTS_DIR
 from app.inspector import PCBInspector
 from app.utils import image_to_base64, read_imagefile
 
-# --- АЛГОРИТМ ОЧИСТКИ (Фоновая задача) ---
 async def cleanup_results_task():
     while True:
         try:
             now = time.time()
-            # Удаляем файлы старше 30 минут (1800 секунд)
             for filename in os.listdir(RESULTS_DIR):
                 file_path = os.path.join(RESULTS_DIR, filename)
                 if os.path.isfile(file_path):
@@ -29,18 +27,14 @@ async def cleanup_results_task():
                         os.remove(file_path)
         except Exception as e:
             print(f"Cleanup error: {e}")
-        # Ждем 10 минут перед следующей проверкой
         await asyncio.sleep(600)
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # Запускается при старте сервера
     task = asyncio.create_task(cleanup_results_task())
     yield
-    # Запускается при выключении сервера
     task.cancel()
 
-# Добавляем lifespan в приложение
 app = FastAPI(title="PCB Defect Detective", lifespan=lifespan)
 inspector = PCBInspector()
 

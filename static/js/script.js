@@ -89,11 +89,9 @@ function showToast(message) {
     toastMsg.innerHTML = message;
     toast.classList.add('show');
 
-    // Сброс и запуск прогресс-бара
     toastProg.style.transition = 'none';
     toastProg.style.width = '100%';
 
-    // Небольшая задержка, чтобы браузер успел отрисовать 100%, затем запускаем анимацию до 0%
     setTimeout(() => {
         toastProg.style.transition = 'width 6s linear';
         toastProg.style.width = '0%';
@@ -103,9 +101,7 @@ function showToast(message) {
     toastTimeout = setTimeout(hideToast, 6000);
 }
 
-// Глобальный слушатель кликов: если кликнули куда угодно, закрываем тост
 document.addEventListener('click', (e) => {
-    // Проверяем, что тост открыт и клик был НЕ по самому переключателю языка
     if (toast && toast.classList.contains('show') && !e.target.closest('.lang-toggle')) {
         hideToast();
     }
@@ -131,7 +127,6 @@ function setLang(lang) {
     }
     updateStartButtonText();
 
-    // Если секция результатов открыта, показываем Тост (Предупреждение)
     if (!sections.results.classList.contains('hidden')) {
         showToast(dict[lang].toast_lang);
     }
@@ -290,7 +285,6 @@ function showResults(data) {
         verdictBox.innerHTML = d.verdict_clean;
     }
 
-    // Обрати внимание: Правая плашка лежит под левой. А левая "обрезается" вместе с картинкой эталона!
     const sliderDiv = document.createElement('div');
     sliderDiv.className = 'result-item';
     sliderDiv.innerHTML = `
@@ -323,7 +317,7 @@ function showResults(data) {
         stack.appendChild(createStaticCard(d.res_mask, data.images.mask_overlay));
 
         const finalSection = document.createElement('div');
-        finalSection.className = 'result-item wide'; // ДОБАВЛЕН КЛАСС WIDE ДЛЯ ТАБЛИЦЫ
+        finalSection.className = 'result-item wide';
         finalSection.innerHTML = `<h3>${d.res_class}</h3>`;
 
         const layout = document.createElement('div');
@@ -378,7 +372,6 @@ function showResults(data) {
         setTimeout(() => {
             const rows = document.querySelectorAll('.defect-row');
             rows.forEach(row => {
-                // Для компьютеров (наведение)
                 row.addEventListener('mouseenter', () => {
                     const idx = row.getAttribute('data-idx');
                     document.getElementById(`bbox-${idx}`).classList.add('highlight');
@@ -388,11 +381,8 @@ function showResults(data) {
                     document.getElementById(`bbox-${idx}`).classList.remove('highlight');
                 });
 
-                // Для мобильных устройств (клик/тач)
                 row.addEventListener('click', () => {
-                    // Сначала убираем подсветку со всех
                     document.querySelectorAll('.bbox-overlay').forEach(b => b.classList.remove('highlight'));
-                    // Подсвечиваем ту, на которую кликнули
                     const idx = row.getAttribute('data-idx');
                     document.getElementById(`bbox-${idx}`).classList.add('highlight');
                 });
@@ -416,7 +406,7 @@ function initCompareSlider() {
     if(!container || !overlay || !handle) return;
 
     let isDragging = false;
-    let labelsHidden = false; // Флаг: скрыты ли метки
+    let labelsHidden = false;
     const labels = container.querySelectorAll('.slider-label');
 
     const hideLabels = () => {
@@ -436,7 +426,6 @@ function initCompareSlider() {
         overlay.style.clipPath = `polygon(0 0, ${percent}% 0, ${percent}% 100%, 0 100%)`;
     };
 
-    // При первом касании/нажатии вызываем hideLabels()
     handle.addEventListener('mousedown', (e) => { isDragging = true; hideLabels(); e.preventDefault(); });
     window.addEventListener('mouseup', () => isDragging = false);
     window.addEventListener('mousemove', (e) => {

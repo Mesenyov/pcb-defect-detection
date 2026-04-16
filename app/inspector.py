@@ -137,7 +137,7 @@ class PCBInspector:
                     "x": x / orig_w, "y": y / orig_h,
                     "w": w / orig_w, "h": h / orig_h
                 },
-                "box_px": {"x": x, "y": y, "w": w, "h": h}  # Оставим для таблицы
+                "box_px": {"x": x, "y": y, "w": w, "h": h}
             })
 
         return self._build_response(test_img, gold_img, heatmap, overlay_img, final_img, detections)
