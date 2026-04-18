@@ -186,7 +186,7 @@ async function loadTemplates() {
 
 loadExamples();
 loadTemplates();
-setLang('ru');
+setLang(currentLang);
 
 pcbInput.addEventListener('change', (e) => {
     if (e.target.files && e.target.files[0]) {

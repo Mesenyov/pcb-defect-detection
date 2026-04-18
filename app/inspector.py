@@ -111,7 +111,6 @@ class PCBInspector:
             final_thresh = max(self.thresholds[best_cls], self.min_threshold)
             is_unknown = best_dist > final_thresh
 
-            # Уверенность (0-100%). Если дистанция 0, уверенность 100%. Если равна трешхолду, то ~50%.
             confidence_pct = max(0.0, round((1.0 - best_dist) * 100, 1))
 
             raw_name = "Unknown" if is_unknown else self.class_names[best_cls]
@@ -143,7 +142,6 @@ class PCBInspector:
         return self._build_response(test_img, gold_img, heatmap, overlay_img, final_img, detections)
 
     def _build_response(self, test, gold, heat, over, final, dets):
-        # СОХРАНЯЕМ В ФАЙЛЫ И ОТДАЕМ URL
         return {
             "has_defects": len(dets) > 0,
             "detections": dets,
