@@ -402,9 +402,6 @@ function showResults(data) {
                 });
             });
         }, 100);
-
-    } else {
-        stack.appendChild(createStaticCard(d.res_clean, data.images.final));
     }
 
     sections.results.classList.remove('hidden');
