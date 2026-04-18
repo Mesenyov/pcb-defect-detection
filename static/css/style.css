@@ -661,6 +661,8 @@ h2 {
 }
 
 @media (max-width: 768px) {
+    #backToTop { display: none !important; }
+
     header {
         flex-wrap: wrap;
         padding: 15px;
@@ -690,7 +692,20 @@ h2 {
     }
 
     .results-layout { flex-direction: column; }
-    .image-wrapper, .table-wrapper { width: 100%; flex: auto; }
+    .image-wrapper { width: 100%; flex: auto; }
+    .table-wrapper {
+        width: 100%;
+        flex: auto;
+        overflow-x: auto;
+        padding: 10px;
+    }
+    .defect-table {
+        min-width: 400px;
+    }
+
+    .defect-table td, .defect-table th {
+        padding: 12px 10px;
+    }
     .toast.show { width: 90%; top: 120px; font-size: 0.85rem; }
 
     main {
