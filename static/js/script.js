@@ -32,7 +32,8 @@ const dict = {
         lbl_thresh: "Thresh: ",
         lbl_gold: "GOLDEN TEMPLATE",
         lbl_test: "TEST BOARD",
-        toast_lang: "⚠️ To apply language changes to the image report, please refresh the page or run the analysis again."
+        toast_lang: "⚠️ To apply language changes to the image report, please refresh the page or run the analysis again.",
+        warn_mismatch: "⚠️ WARNING: Massive discrepancy detected! Are you sure the correct template is selected or this is a PCB?"
     },
     ru: {
         btn_choose_board: "[+] Выбрать плату",
@@ -67,7 +68,8 @@ const dict = {
         lbl_thresh: "Порог: ",
         lbl_gold: "ЭТАЛОН",
         lbl_test: "ТЕСТОВАЯ ПЛАТА",
-        toast_lang: "⚠️ Чтобы изменения вступили в силу на изображениях, необходимо перезагрузить страницу или запустить анализ заново."
+        toast_lang: "⚠️ Чтобы изменения вступили в силу на изображениях, необходимо перезагрузить страницу или запустить анализ заново.",
+        warn_mismatch: "⚠️ ВНИМАНИЕ: Аномальное расхождение! Вероятно, выбрана неверная плата или постороннее изображение."
     }
 };
 
@@ -277,12 +279,24 @@ function showResults(data) {
     const d = dict[currentLang];
 
     const defectsCount = data.detections ? data.detections.length : 0;
-    if (data.has_defects) {
+
+    verdictBox.style.borderColor = "";
+    verdictBox.style.color = "";
+
+    if (data.is_mismatch) {
         verdictBox.className = 'verdict-box defects';
-        verdictBox.innerHTML = d.verdict_defects + defectsCount;
+        verdictBox.style.borderColor = "var(--warning-color)";
+        verdictBox.style.color = "var(--warning-color)";
+
+        verdictBox.innerHTML = d.warn_mismatch + "<br><br>" + d.verdict_defects + defectsCount;
     } else {
-        verdictBox.className = 'verdict-box clean';
-        verdictBox.innerHTML = d.verdict_clean;
+        if (data.has_defects) {
+            verdictBox.className = 'verdict-box defects';
+            verdictBox.innerHTML = d.verdict_defects + defectsCount;
+        } else {
+            verdictBox.className = 'verdict-box clean';
+            verdictBox.innerHTML = d.verdict_clean;
+        }
     }
 
     const sliderDiv = document.createElement('div');

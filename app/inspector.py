@@ -45,7 +45,6 @@ class PCBInspector:
         self.transform_embedder = A.Compose(
             [A.Resize(256, 256), A.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]), ToTensorV2()])
 
-    # ПРИНИМАЕМ LANG
     def predict_and_visualize(self, test_img, gold_img, lang="ru"):
         # Image alignment (выключено для скорости)
         # test_img = align_images(test_img, gold_img)
@@ -64,6 +63,9 @@ class PCBInspector:
             probs = torch.sigmoid(logits)
             mask_raw = (probs > 0.5).float().cpu().numpy()[0, 0]
 
+        defect_area_ratio = float(np.sum(mask_raw) / mask_raw.size)
+        is_mismatch = defect_area_ratio > 0.35
+
         mask_uint8 = cv2.resize((mask_raw * 255).astype(np.uint8), (orig_w, orig_h))
         heatmap = cv2.applyColorMap(mask_uint8, cv2.COLORMAP_JET)
 
@@ -76,10 +78,10 @@ class PCBInspector:
 
         final_img = test_img.copy()
         contours, _ = cv2.findContours(mask_uint8, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
-        detections = []
+        detections =[]
 
         if not contours:
-            return self._build_response(test_img, gold_img, heatmap, overlay_img, final_img, detections)
+            return self._build_response(test_img, gold_img, heatmap, overlay_img, final_img, detections, is_mismatch)
 
         scale_factor = float(orig_w) / 1500.0
         adaptive_font = int(max(12.0, min(45.0, 25.0 * scale_factor)))
@@ -114,7 +116,6 @@ class PCBInspector:
             confidence_pct = max(0.0, round((1.0 - best_dist) * 100, 1))
 
             raw_name = "Unknown" if is_unknown else self.class_names[best_cls]
-            # ЛОКАЛИЗАЦИЯ ИМЕНИ НА КАРТИНКЕ
             display_name = CLASS_DISPLAY_NAMES.get(lang, CLASS_DISPLAY_NAMES['en']).get(raw_name, raw_name)
 
             color = (0, 255, 255) if is_unknown else (0, 0, 255)
@@ -125,25 +126,23 @@ class PCBInspector:
 
             final_img = draw_text_bg(final_img, display_name, text_pos, (0, 0, 0), color, adaptive_font)
 
-            # ДОБАВЛЯЕМ КООРДИНАТЫ В % ДЛЯ АДАПТИВНОЙ ВЕРСТКИ
             detections.append({
                 "class": display_name,
                 "is_unknown": is_unknown,
                 "confidence": confidence_pct,
                 "distance": round(best_dist, 3) if is_unknown else None,
                 "threshold": round(final_thresh, 3) if is_unknown else None,
-                "box_pct": {
-                    "x": x / orig_w, "y": y / orig_h,
-                    "w": w / orig_w, "h": h / orig_h
-                },
+                "box_pct": {"x": x / orig_w, "y": y / orig_h, "w": w / orig_w, "h": h / orig_h},
                 "box_px": {"x": x, "y": y, "w": w, "h": h}
             })
 
-        return self._build_response(test_img, gold_img, heatmap, overlay_img, final_img, detections)
+        return self._build_response(test_img, gold_img, heatmap, overlay_img, final_img, detections, is_mismatch)
 
-    def _build_response(self, test, gold, heat, over, final, dets):
+    # ОБНОВЛЕННАЯ СИГНАТУРА _build_response
+    def _build_response(self, test, gold, heat, over, final, dets, is_mismatch):
         return {
             "has_defects": len(dets) > 0,
+            "is_mismatch": is_mismatch, # Передаем флаг на фронтенд
             "detections": dets,
             "images": {
                 "test": save_result_image(test, "test"),
