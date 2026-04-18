@@ -19,7 +19,7 @@ This project provides an automated visual quality inspection (AOI) framework for
 
 ## 🖥️ System Interface
 
-![Web Interface for PCB Defect Detection](static/img/screenshot.png)
+![Web Interface for PCB Defect Detection](static/img/screenshot_en.png)
 > **Interactive Analytical Dashboard:** The web-based UI provides end-to-end defect localization and metric classification. It highlights known defects with precise bounding boxes, displays real-time confidence scores computed via ArcFace latent distances, and explicitly tags novel OOD anomalies, ensuring highly interpretable results for AOI operators.
 
 ---
