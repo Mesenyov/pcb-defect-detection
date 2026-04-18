@@ -1,3 +1,7 @@
+<div align="right">
+  🌍 <strong>English</strong> | <a href="README_ru.md">🇷🇺 Русский</a>
+</div>
+
 🔍 Siamese Neural Network-Based Adaptive Approach for Open-Set Defect Detection in PCBs
 
 ![Project Status](https://img.shields.io/badge/status-active-green)
